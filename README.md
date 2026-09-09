@@ -98,24 +98,29 @@ jobs:
 
 **Action Inputs**
 
-| Input         | Description                                  | Required                                      |
-| ------------- | -------------------------------------------- | --------------------------------------------- |
-| `agent`       | Single agent name or slug                    | One of these                                  |
-| `agents`      | Comma-separated slugs for swarm mode         | ↕                                             |
-| `category`    | Load all agents from a category              | ↕                                             |
-| `swarm_name`  | Swarm display name                           | No                                            |
-| `mission`     | Mission statement for the swarm prompt       | No                                            |
-| `source_repo` | Git URL of the agent roster to load from     | No — defaults to `msitarzewski/agency-agents` |
-| `source_ref`  | Branch/tag/ref of `source_repo` to check out | No — defaults to `main`                       |
+| Input              | Description                                             | Required                                      |
+| ------------------ | ------------------------------------------------------- | --------------------------------------------- |
+| `agent`            | Single agent name or slug                               | One of these                                  |
+| `agents`           | Comma-separated slugs for swarm mode                    | ↕                                             |
+| `category`         | Load all agents from a category                         | ↕                                             |
+| `swarm_name`       | Swarm display name                                      | No                                            |
+| `mission`          | Mission statement for the swarm prompt                  | No                                            |
+| `source_repo`      | Git URL of the agent roster to load from                | No — defaults to `msitarzewski/agency-agents` |
+| `source_ref`       | Branch/tag/ref of `source_repo` to check out            | No — defaults to `main`                       |
+| `run_inference`    | Pipe the resolved system prompt into GitHub Copilot CLI | No — defaults to `false`                      |
+| `inference_prompt` | User prompt sent to Copilot CLI                         | Only with `run_inference: true`               |
+| `inference_model`  | Model passed to Copilot CLI                             | No — defaults to `gpt-4.1`                    |
+| `copilot_token`    | Copilot-licensed PAT to authenticate the CLI            | Only with `run_inference: true`               |
 
 **Action Outputs**
 
-| Output          | Description                                   |
-| --------------- | --------------------------------------------- |
-| `system_prompt` | Agent or swarm orchestrator prompt (Markdown) |
-| `agent_name`    | Resolved agent name (single-agent only)       |
-| `agent_json`    | Agent metadata JSON (single-agent only)       |
-| `swarm_json`    | Array of agent metadata JSON (swarm mode)     |
+| Output               | Description                                             |
+| -------------------- | ------------------------------------------------------- |
+| `system_prompt`      | Agent or swarm orchestrator prompt (Markdown)           |
+| `agent_name`         | Resolved agent name (single-agent only)                 |
+| `agent_json`         | Agent metadata JSON (single-agent only)                 |
+| `swarm_json`         | Array of agent metadata JSON (swarm mode)               |
+| `inference_response` | Copilot CLI's response text, when `run_inference: true` |
 
 Point at a fork or a pinned release instead of live `main`:
 
@@ -126,6 +131,25 @@ Point at a fork or a pinned release instead of live `main`:
     source_repo: "https://github.com/your-org/agency-agents.git"
     source_ref: "v2026.09.01"
 ```
+
+### Running the agent through GitHub Copilot
+
+Set `run_inference: true` to have the action pipe the resolved system prompt straight into [GitHub Copilot CLI](https://github.com/github/copilot-cli) (via [`actions/ai-inference`](https://github.com/actions/ai-inference)) and hand back its response. The default `GITHUB_TOKEN` doesn't carry a Copilot subscription, so you need a PAT from an account with Copilot access, stored as a secret:
+
+```yaml
+- name: Review PR with the Security Engineer agent
+  id: review
+  uses: el-j/agency-agents-sdk@main
+  with:
+    agent: security-engineer
+    run_inference: true
+    inference_prompt: "Review this PR diff for security issues."
+    copilot_token: ${{ secrets.COPILOT_PAT }}
+
+- run: echo "${{ steps.review.outputs.inference_response }}"
+```
+
+This is opt-in — without `run_inference`, the action only resolves and outputs the prompt text; you decide how (or whether) to call an LLM with it.
 
 ## Development
 

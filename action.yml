@@ -49,6 +49,34 @@ inputs:
     required: false
     default: "main"
 
+  run_inference:
+    description: >
+      When "true", pipe the resolved system prompt into GitHub Copilot CLI
+      (via actions/ai-inference) and return its response as the
+      `inference_response` output. Requires `inference_prompt` and
+      `copilot_token` to be set. Off by default.
+    required: false
+    default: "false"
+
+  inference_prompt:
+    description: "User prompt to send to Copilot CLI alongside the agent's system prompt. Required when `run_inference` is true."
+    required: false
+    default: ""
+
+  inference_model:
+    description: "Model to pass to Copilot CLI (e.g. `gpt-4.1`, `claude-sonnet-4.5`). Only used when `run_inference` is true."
+    required: false
+    default: "gpt-4.1"
+
+  copilot_token:
+    description: >
+      A GitHub PAT for a user/account with an active Copilot subscription,
+      used to authenticate the Copilot CLI. The default `GITHUB_TOKEN` does
+      not have Copilot access, so this must be supplied (typically via a
+      repo/org secret) when `run_inference` is true.
+    required: false
+    default: ""
+
 outputs:
   system_prompt:
     description: "The agent system prompt (Markdown). For swarms this is the full orchestrator prompt."
@@ -66,6 +94,10 @@ outputs:
     description: "Array of agent metadata objects as a JSON string (swarm mode)."
     value: ${{ steps.load.outputs.swarm_json }}
 
+  inference_response:
+    description: "Copilot CLI's response text, when `run_inference` is true. Empty otherwise."
+    value: ${{ steps.inference.outputs.response }}
+
 runs:
   using: "composite"
   steps:
@@ -80,6 +112,9 @@ runs:
         AGENCY_MISSION: ${{ inputs.mission }}
         AGENCY_SOURCE_REPO: ${{ inputs.source_repo }}
         AGENCY_SOURCE_REF: ${{ inputs.source_ref }}
+        AGENCY_RUN_INFERENCE: ${{ inputs.run_inference }}
+        AGENCY_INFERENCE_PROMPT: ${{ inputs.inference_prompt }}
+        AGENCY_COPILOT_TOKEN: ${{ inputs.copilot_token }}
       run: |
         // -----------------------------------------------------------------------
         // agency-agents-sdk GitHub Action — inline Node.js loader
@@ -219,6 +254,20 @@ runs:
         const category   = (process.env.AGENCY_CATEGORY || '').trim();
         const swarmName  = (process.env.AGENCY_SWARM_NAME || 'Agency Swarm').trim();
         const mission    = (process.env.AGENCY_MISSION   || '').trim();
+        const runInference     = (process.env.AGENCY_RUN_INFERENCE || '').trim() === 'true';
+        const inferencePrompt  = (process.env.AGENCY_INFERENCE_PROMPT || '').trim();
+        const copilotToken     = (process.env.AGENCY_COPILOT_TOKEN || '').trim();
+
+        if (runInference) {
+          if (!inferencePrompt) {
+            console.error('::error::Agency Agents: `inference_prompt` is required when `run_inference` is true.');
+            process.exit(1);
+          }
+          if (!copilotToken) {
+            console.error('::error::Agency Agents: `copilot_token` is required when `run_inference` is true (GITHUB_TOKEN has no Copilot access).');
+            process.exit(1);
+          }
+        }
 
         console.log(`Fetching agent roster from ${sourceRepo}@${sourceRef} ...`);
         const rootDir = cloneSource(sourceRepo, sourceRef);
@@ -271,3 +320,19 @@ runs:
         setOutput('agent_json',    '{}');
         setOutput('swarm_json',    JSON.stringify(swarmAgents.map(a => ({ name: a.name, slug: a.slug, description: a.description, color: a.color, category: a.category }))));
         console.log(`✅ Loaded swarm: ${swarmAgents.length} agents (${swarmName})`);
+
+    - name: Install Copilot CLI
+      if: ${{ inputs.run_inference == 'true' }}
+      shell: bash
+      run: npm install -g @github/copilot
+
+    - name: Run Copilot inference
+      id: inference
+      if: ${{ inputs.run_inference == 'true' }}
+      uses: actions/ai-inference@v1
+      with:
+        prompt: ${{ inputs.inference_prompt }}
+        system-prompt: ${{ steps.load.outputs.system_prompt }}
+        model: ${{ inputs.inference_model }}
+      env:
+        COPILOT_GITHUB_TOKEN: ${{ inputs.copilot_token }}
