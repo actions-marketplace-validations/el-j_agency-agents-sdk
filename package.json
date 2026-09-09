@@ -29,7 +29,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "prepare": "node scripts/install-hooks.mjs"
+    "prepare": "node scripts/install-hooks.mjs",
+    "release": "semantic-release"
   },
   "keywords": [
     "ai",
@@ -52,9 +53,12 @@
   "homepage": "https://github.com/el-j/agency-agents-sdk#readme",
   "dependencies": {},
   "devDependencies": {
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/git": "^11.0.1",
     "@types/node": "^26.5.0",
     "oxlint": "^1.82.0",
     "prettier": "^3.9.6",
+    "semantic-release": "^25.0.9",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0"
   },
