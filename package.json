@@ -47,11 +47,14 @@
   "homepage": "https://github.com/el-j/agency-agents-sdk#readme",
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "typescript": "^5.4.0",
-    "vitest": "^4.0.0"
+    "@types/node": "^26.5.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }
