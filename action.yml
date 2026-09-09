@@ -1,12 +1,9 @@
-name: 'Agency Agents — Spawn Agent'
-description: >
-  Load one or more AI agent personalities from The Agency and expose
-  their system prompts as step outputs. Use the outputs to seed an AI
-  session, a Claude Code sub-agent, or any LLM API call in your workflow.
+name: "Agency Agents — Spawn Agent"
+description: "Load AI agent prompts from The Agency and expose them as workflow outputs."
 
 branding:
-  icon: 'user-check'
-  color: 'purple'
+  icon: "user-check"
+  color: "purple"
 
 inputs:
   agent:
@@ -14,7 +11,7 @@ inputs:
       Agent name or slug to load (e.g. "frontend-developer" or
       "Frontend Developer"). Mutually exclusive with `agents`.
     required: false
-    default: ''
+    default: ""
 
   agents:
     description: >
@@ -22,7 +19,7 @@ inputs:
       (e.g. "frontend-developer,backend-architect").
       When provided, a combined orchestrator prompt is generated.
     required: false
-    default: ''
+    default: ""
 
   category:
     description: >
@@ -30,47 +27,47 @@ inputs:
       (e.g. "engineering", "design", "marketing").
       Ignored when `agent` or `agents` is set.
     required: false
-    default: ''
+    default: ""
 
   swarm_name:
-    description: 'Display name for a swarm (only used with `agents` or `category`).'
+    description: "Display name for a swarm (only used with `agents` or `category`)."
     required: false
-    default: 'Agency Swarm'
+    default: "Agency Swarm"
 
   mission:
-    description: 'High-level mission statement prepended to the swarm orchestrator prompt.'
+    description: "High-level mission statement prepended to the swarm orchestrator prompt."
     required: false
-    default: ''
+    default: ""
 
   source_repo:
-    description: 'Git URL of the agent roster to load from.'
+    description: "Git URL of the agent roster to load from."
     required: false
-    default: 'https://github.com/msitarzewski/agency-agents.git'
+    default: "https://github.com/msitarzewski/agency-agents.git"
 
   source_ref:
-    description: 'Branch, tag, or ref of source_repo to check out.'
+    description: "Branch, tag, or ref of source_repo to check out."
     required: false
-    default: 'main'
+    default: "main"
 
 outputs:
   system_prompt:
-    description: 'The agent system prompt (Markdown). For swarms this is the full orchestrator prompt.'
+    description: "The agent system prompt (Markdown). For swarms this is the full orchestrator prompt."
     value: ${{ steps.load.outputs.system_prompt }}
 
   agent_name:
-    description: 'Resolved agent name (single-agent mode only).'
+    description: "Resolved agent name (single-agent mode only)."
     value: ${{ steps.load.outputs.agent_name }}
 
   agent_json:
-    description: 'Agent metadata as a JSON string (single-agent mode only).'
+    description: "Agent metadata as a JSON string (single-agent mode only)."
     value: ${{ steps.load.outputs.agent_json }}
 
   swarm_json:
-    description: 'Array of agent metadata objects as a JSON string (swarm mode).'
+    description: "Array of agent metadata objects as a JSON string (swarm mode)."
     value: ${{ steps.load.outputs.swarm_json }}
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Load agent(s)
       id: load

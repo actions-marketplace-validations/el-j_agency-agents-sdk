@@ -18,13 +18,18 @@ export type {
   AgentFrontmatter,
   Swarm,
   SwarmOptions,
-} from './types.js';
+} from "./types.js";
 
 // Agent loading
-export { loadAgents, getAgent, listAgents, listCategories } from './registry.js';
+export {
+  loadAgents,
+  getAgent,
+  listAgents,
+  listCategories,
+} from "./registry.js";
 
 // Swarm orchestration
-export { buildSwarm } from './swarm.js';
+export { buildSwarm } from "./swarm.js";
 
 // Upstream source resolution (this package ships no agent content itself —
 // see resolveSourceRoot for how the default roster is fetched)
@@ -32,8 +37,8 @@ export {
   resolveSourceRoot,
   DEFAULT_SOURCE_REPO,
   DEFAULT_SOURCE_REF,
-} from './source.js';
-export type { SourceOptions } from './source.js';
+} from "./source.js";
+export type { SourceOptions } from "./source.js";
 
 // Lower-level utilities (for advanced consumers)
 export {
@@ -42,4 +47,4 @@ export {
   collectMarkdownFiles,
   slugify,
   AGENT_CATEGORIES,
-} from './loader.js';
+} from "./loader.js";

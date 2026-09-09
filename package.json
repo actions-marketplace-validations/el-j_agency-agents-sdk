@@ -22,9 +22,14 @@
   "scripts": {
     "build": "tsc --project tsconfig.build.json && node scripts/build-cjs.mjs",
     "typecheck": "tsc --noEmit",
+    "lint": "oxlint . --deny-warnings",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format && npm run typecheck && npm test -- --run && npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepare": "node scripts/install-hooks.mjs"
   },
   "keywords": [
     "ai",
@@ -48,6 +53,8 @@
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^26.5.0",
+    "oxlint": "^1.82.0",
+    "prettier": "^3.9.6",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0"
   },

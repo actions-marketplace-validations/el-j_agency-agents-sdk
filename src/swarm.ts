@@ -1,4 +1,4 @@
-import type { Agent, Swarm, SwarmOptions } from './types.js';
+import type { Agent, Swarm, SwarmOptions } from "./types.js";
 
 /**
  * Build a {@link Swarm} from an array of resolved agents.
@@ -16,44 +16,44 @@ import type { Agent, Swarm, SwarmOptions } from './types.js';
  */
 export function buildSwarm(agents: Agent[], options: SwarmOptions = {}): Swarm {
   if (agents.length === 0) {
-    throw new Error('buildSwarm requires at least one agent.');
+    throw new Error("buildSwarm requires at least one agent.");
   }
 
-  const swarmName = options.name ?? 'Agency Swarm';
-  const mission = options.mission ?? '';
+  const swarmName = options.name ?? "Agency Swarm";
+  const mission = options.mission ?? "";
 
   const agentSummaries = agents
     .map((a) => `### ${a.name} (${a.category})\n> ${a.description}`)
-    .join('\n\n');
+    .join("\n\n");
 
-  const agentNames = agents.map((a) => a.name).join(', ');
+  const agentNames = agents.map((a) => a.name).join(", ");
 
   const orchestratorPrompt = [
     `# ${swarmName}`,
-    '',
-    mission ? `**Mission**: ${mission}\n` : '',
+    "",
+    mission ? `**Mission**: ${mission}\n` : "",
     `You are coordinating a swarm of ${agents.length} specialist AI agents: ${agentNames}.`,
-    '',
-    '## Agent Roster',
-    '',
+    "",
+    "## Agent Roster",
+    "",
     agentSummaries,
-    '',
-    '## Coordination Rules',
-    '',
-    '1. **Assign tasks** to the most qualified agent based on their specialty.',
-    '2. **Handoff context** clearly between agents — include relevant prior outputs.',
-    '3. **One agent per task**: avoid overlapping responsibilities.',
-    '4. **Quality gates**: each agent output must be reviewed before advancing.',
-    '5. **Escalate blockers** immediately rather than stalling the pipeline.',
-    '',
-    '## Agent System Prompts',
-    '',
+    "",
+    "## Coordination Rules",
+    "",
+    "1. **Assign tasks** to the most qualified agent based on their specialty.",
+    "2. **Handoff context** clearly between agents — include relevant prior outputs.",
+    "3. **One agent per task**: avoid overlapping responsibilities.",
+    "4. **Quality gates**: each agent output must be reviewed before advancing.",
+    "5. **Escalate blockers** immediately rather than stalling the pipeline.",
+    "",
+    "## Agent System Prompts",
+    "",
     ...agents.map(
       (a) =>
         `### ${a.name}\n\n<system-prompt>\n${a.systemPrompt}\n</system-prompt>`,
     ),
   ]
-    .join('\n')
+    .join("\n")
     .trim();
 
   return { agents, orchestratorPrompt };

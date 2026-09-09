@@ -1,27 +1,27 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import type { Agent, AgentCategory } from './types.js';
+import fs from "node:fs";
+import path from "node:path";
+import type { Agent, AgentCategory } from "./types.js";
 
 /** All agent category directory names — must track the divisions in divisions.json. */
 export const AGENT_CATEGORIES: AgentCategory[] = [
-  'academic',
-  'design',
-  'engineering',
-  'finance',
-  'game-development',
-  'gis',
-  'healthcare',
-  'marketing',
-  'paid-media',
-  'product',
-  'project-management',
-  'research',
-  'sales',
-  'security',
-  'spatial-computing',
-  'specialized',
-  'support',
-  'testing',
+  "academic",
+  "design",
+  "engineering",
+  "finance",
+  "game-development",
+  "gis",
+  "healthcare",
+  "marketing",
+  "paid-media",
+  "product",
+  "project-management",
+  "research",
+  "sales",
+  "security",
+  "spatial-computing",
+  "specialized",
+  "support",
+  "testing",
 ];
 
 /**
@@ -35,18 +35,21 @@ export const AGENT_CATEGORIES: AgentCategory[] = [
  *
  * @internal
  */
-function parseFrontmatter(raw: string): { data: Record<string, string>; body: string } {
+function parseFrontmatter(raw: string): {
+  data: Record<string, string>;
+  body: string;
+} {
   const data: Record<string, string> = {};
-  const lines = raw.split('\n');
+  const lines = raw.split("\n");
 
   // Find opening and closing '---' delimiters
-  if (lines[0]?.trimEnd() !== '---') {
+  if (lines[0]?.trimEnd() !== "---") {
     return { data, body: raw };
   }
 
   let closingIdx = -1;
   for (let i = 1; i < lines.length; i++) {
-    if (lines[i]?.trimEnd() === '---') {
+    if (lines[i]?.trimEnd() === "---") {
       closingIdx = i;
       break;
     }
@@ -59,21 +62,21 @@ function parseFrontmatter(raw: string): { data: Record<string, string>; body: st
   // Extract frontmatter lines
   const fmLines = lines.slice(1, closingIdx);
   for (const line of fmLines) {
-    const colonIdx = line.indexOf(': ');
+    const colonIdx = line.indexOf(": ");
     if (colonIdx !== -1) {
       const key = line.slice(0, colonIdx).trim();
       const value = line.slice(colonIdx + 2).trim();
       data[key] = value;
-    } else if (line.includes(':') && !line.includes(': ')) {
+    } else if (line.includes(":") && !line.includes(": ")) {
       // Handle `key:` with no value (empty string)
-      const colonIdx2 = line.indexOf(':');
+      const colonIdx2 = line.indexOf(":");
       const key = line.slice(0, colonIdx2).trim();
-      data[key] = '';
+      data[key] = "";
     }
   }
 
   // Body is everything after the closing '---'
-  const body = lines.slice(closingIdx + 1).join('\n');
+  const body = lines.slice(closingIdx + 1).join("\n");
   return { data, body };
 }
 /**
@@ -84,8 +87,8 @@ function parseFrontmatter(raw: string): { data: Record<string, string>; body: st
 export function slugify(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 /**
@@ -95,19 +98,22 @@ export function slugify(name: string): string {
  * @param filePath  Absolute path to the `.md` file.
  * @param category  The agent directory category this file belongs to.
  */
-export function loadAgentFile(filePath: string, category: AgentCategory): Agent | null {
-  const raw = fs.readFileSync(filePath, 'utf-8');
+export function loadAgentFile(
+  filePath: string,
+  category: AgentCategory,
+): Agent | null {
+  const raw = fs.readFileSync(filePath, "utf-8");
   const { data, body } = parseFrontmatter(raw);
 
-  if (!data['name'] || !data['description']) {
+  if (!data["name"] || !data["description"]) {
     return null;
   }
 
   return {
-    name: data['name'],
-    slug: slugify(data['name']),
-    description: data['description'],
-    color: data['color'] ?? 'gray',
+    name: data["name"],
+    slug: slugify(data["name"]),
+    description: data["description"],
+    color: data["color"] ?? "gray",
     category,
     filePath,
     systemPrompt: body.trim(),
@@ -148,15 +154,15 @@ export function loadAgentsFromDir(rootDir: string): Agent[] {
 export function collectMarkdownFiles(dir: string): string[] {
   const results: string[] = [];
 
-  const entries = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  const entries = fs
+    .readdirSync(dir, { withFileTypes: true })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       results.push(...collectMarkdownFiles(fullPath));
-    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+    } else if (entry.isFile() && entry.name.endsWith(".md")) {
       results.push(fullPath);
     }
   }

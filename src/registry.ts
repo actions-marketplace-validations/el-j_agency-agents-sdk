@@ -1,6 +1,6 @@
-import { loadAgentsFromDir, slugify } from './loader.js';
-import { resolveSourceRoot } from './source.js';
-import type { Agent, AgentCategory } from './types.js';
+import { loadAgentsFromDir, slugify } from "./loader.js";
+import { resolveSourceRoot } from "./source.js";
+import type { Agent, AgentCategory } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Registry
@@ -38,7 +38,10 @@ export function loadAgents(rootDir?: string): Agent[] {
  *   getAgent('frontend-developer')
  *   getAgent('Frontend Developer')
  */
-export function getAgent(nameOrSlug: string, rootDir?: string): Agent | undefined {
+export function getAgent(
+  nameOrSlug: string,
+  rootDir?: string,
+): Agent | undefined {
   const normalised = slugify(nameOrSlug);
   return loadAgents(rootDir).find(
     (a) =>
@@ -54,7 +57,10 @@ export function getAgent(nameOrSlug: string, rootDir?: string): Agent | undefine
  *   listAgents()                        // all agents
  *   listAgents('engineering')           // engineering agents only
  */
-export function listAgents(category?: AgentCategory, rootDir?: string): Agent[] {
+export function listAgents(
+  category?: AgentCategory,
+  rootDir?: string,
+): Agent[] {
   const all = loadAgents(rootDir);
   if (category === undefined) return all;
   return all.filter((a) => a.category === category);

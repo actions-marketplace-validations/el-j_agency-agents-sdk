@@ -14,19 +14,28 @@
  * fetch entirely).
  */
 
-import process from 'node:process';
-import { getAgent, listAgents, listCategories, buildSwarm, AGENT_CATEGORIES } from './index.js';
-import type { Agent, AgentCategory } from './types.js';
+import process from "node:process";
+import {
+  getAgent,
+  listAgents,
+  listCategories,
+  buildSwarm,
+  AGENT_CATEGORIES,
+} from "./index.js";
+import type { Agent, AgentCategory } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Global --root flag
 // ---------------------------------------------------------------------------
 
-function extractRoot(argv: string[]): { root: string | undefined; rest: string[] } {
+function extractRoot(argv: string[]): {
+  root: string | undefined;
+  rest: string[];
+} {
   const rest: string[] = [];
   let root: string | undefined;
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--root' && argv[i + 1] !== undefined) {
+    if (argv[i] === "--root" && argv[i + 1] !== undefined) {
       root = argv[++i];
     } else {
       rest.push(argv[i]!);
@@ -41,11 +50,11 @@ function extractRoot(argv: string[]): { root: string | undefined; rest: string[]
 
 function printAgent(agent: Agent, asJson: boolean, promptOnly: boolean): void {
   if (promptOnly) {
-    process.stdout.write(agent.systemPrompt + '\n');
+    process.stdout.write(agent.systemPrompt + "\n");
     return;
   }
   if (asJson) {
-    process.stdout.write(JSON.stringify(agent, null, 2) + '\n');
+    process.stdout.write(JSON.stringify(agent, null, 2) + "\n");
     return;
   }
   console.log(`\n🎭 ${agent.name}`);
@@ -93,9 +102,9 @@ function cmdList(args: string[], root: string | undefined): void {
   let asJson = false;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--category' && args[i + 1] !== undefined) {
+    if (args[i] === "--category" && args[i + 1] !== undefined) {
       category = args[++i];
-    } else if (args[i] === '--json') {
+    } else if (args[i] === "--json") {
       asJson = true;
     }
   }
@@ -104,7 +113,9 @@ function cmdList(args: string[], root: string | undefined): void {
   let validCategory: AgentCategory | undefined;
   if (category !== undefined) {
     if (!(AGENT_CATEGORIES as readonly string[]).includes(category)) {
-      console.error(`Error: unknown category "${category}". Valid categories: ${AGENT_CATEGORIES.join(', ')}`);
+      console.error(
+        `Error: unknown category "${category}". Valid categories: ${AGENT_CATEGORIES.join(", ")}`,
+      );
       process.exit(1);
     }
     validCategory = category as AgentCategory;
@@ -113,12 +124,12 @@ function cmdList(args: string[], root: string | undefined): void {
   const agents = listAgents(validCategory, root);
 
   if (asJson) {
-    process.stdout.write(JSON.stringify(agents, null, 2) + '\n');
+    process.stdout.write(JSON.stringify(agents, null, 2) + "\n");
     return;
   }
 
   if (agents.length === 0) {
-    console.log('No agents found.');
+    console.log("No agents found.");
     return;
   }
 
@@ -141,15 +152,15 @@ function cmdList(args: string[], root: string | undefined): void {
 function cmdGet(args: string[], root: string | undefined): void {
   const nameOrSlug = args[0];
   if (!nameOrSlug) {
-    console.error('Error: get requires a name or slug argument.');
+    console.error("Error: get requires a name or slug argument.");
     process.exit(1);
   }
 
   let asJson = false;
   let promptOnly = false;
   for (const arg of args.slice(1)) {
-    if (arg === '--json') asJson = true;
-    if (arg === '--prompt') promptOnly = true;
+    if (arg === "--json") asJson = true;
+    if (arg === "--prompt") promptOnly = true;
   }
 
   const agent = getAgent(nameOrSlug, root);
@@ -164,7 +175,7 @@ function cmdGet(args: string[], root: string | undefined): void {
 function cmdSwarm(args: string[], root: string | undefined): void {
   const slugsRaw = args[0];
   if (!slugsRaw) {
-    console.error('Error: swarm requires at least one agent slug.');
+    console.error("Error: swarm requires at least one agent slug.");
     process.exit(1);
   }
 
@@ -172,11 +183,13 @@ function cmdSwarm(args: string[], root: string | undefined): void {
   let mission: string | undefined;
 
   for (let i = 1; i < args.length; i++) {
-    if (args[i] === '--name' && args[i + 1] !== undefined) swarmName = args[++i];
-    if (args[i] === '--mission' && args[i + 1] !== undefined) mission = args[++i];
+    if (args[i] === "--name" && args[i + 1] !== undefined)
+      swarmName = args[++i];
+    if (args[i] === "--mission" && args[i + 1] !== undefined)
+      mission = args[++i];
   }
 
-  const slugs = slugsRaw.split(',').map((s) => s.trim());
+  const slugs = slugsRaw.split(",").map((s) => s.trim());
   const agents = slugs.map((slug) => {
     const a = getAgent(slug, root);
     if (!a) {
@@ -190,7 +203,7 @@ function cmdSwarm(args: string[], root: string | undefined): void {
     ...(swarmName !== undefined && { name: swarmName }),
     ...(mission !== undefined && { mission }),
   });
-  process.stdout.write(swarm.orchestratorPrompt + '\n');
+  process.stdout.write(swarm.orchestratorPrompt + "\n");
 }
 
 function cmdCategories(root: string | undefined): void {
@@ -208,20 +221,20 @@ const [, , command, ...rawRest] = process.argv;
 const { root, rest } = extractRoot(rawRest);
 
 switch (command) {
-  case 'list':
+  case "list":
     cmdList(rest, root);
     break;
-  case 'get':
+  case "get":
     cmdGet(rest, root);
     break;
-  case 'swarm':
+  case "swarm":
     cmdSwarm(rest, root);
     break;
-  case 'categories':
+  case "categories":
     cmdCategories(root);
     break;
-  case '--help':
-  case '-h':
+  case "--help":
+  case "-h":
   case undefined:
     usage();
     break;

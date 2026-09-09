@@ -15,21 +15,21 @@ npm install agency-agents-sdk
 ## TypeScript / Node.js
 
 ```typescript
-import { getAgent, listAgents, buildSwarm } from 'agency-agents-sdk';
+import { getAgent, listAgents, buildSwarm } from "agency-agents-sdk";
 
 // Get a single agent — on first call this shallow-clones
 // msitarzewski/agency-agents into a local cache; later calls in the same
 // process reuse it, and each new process re-fetches to stay current.
-const agent = getAgent('frontend-developer');
+const agent = getAgent("frontend-developer");
 console.log(agent?.systemPrompt); // full system prompt
 
 // List all engineering agents
-const engineers = listAgents('engineering');
+const engineers = listAgents("engineering");
 
 // Build a multi-agent swarm orchestrator prompt
 const swarm = buildSwarm(
-  [getAgent('frontend-developer')!, getAgent('backend-architect')!],
-  { name: 'MVP Team', mission: 'Ship v1 in 4 weeks' }
+  [getAgent("frontend-developer")!, getAgent("backend-architect")!],
+  { name: "MVP Team", mission: "Ship v1 in 4 weeks" },
 );
 // Feed swarm.orchestratorPrompt to your LLM as the system prompt
 ```
@@ -37,9 +37,12 @@ const swarm = buildSwarm(
 Already have your own checkout of `msitarzewski/agency-agents` (or a fork)? Point straight at it and skip the fetch entirely:
 
 ```typescript
-import { getAgent } from 'agency-agents-sdk';
+import { getAgent } from "agency-agents-sdk";
 
-const agent = getAgent('frontend-developer', '/path/to/your/agency-agents/checkout');
+const agent = getAgent(
+  "frontend-developer",
+  "/path/to/your/agency-agents/checkout",
+);
 ```
 
 ## CLI
@@ -82,9 +85,9 @@ jobs:
         id: swarm
         uses: el-j/agency-agents-sdk@main
         with:
-          agents: 'frontend-developer,backend-architect,growth-hacker'
-          swarm_name: 'Startup MVP Team'
-          mission: 'Launch a SaaS MVP in 4 weeks'
+          agents: "frontend-developer,backend-architect,growth-hacker"
+          swarm_name: "Startup MVP Team"
+          mission: "Launch a SaaS MVP in 4 weeks"
 
       - name: Launch swarm
         env:
@@ -95,33 +98,33 @@ jobs:
 
 **Action Inputs**
 
-| Input | Description | Required |
-|-------|-------------|----------|
-| `agent` | Single agent name or slug | One of these |
-| `agents` | Comma-separated slugs for swarm mode | ↕ |
-| `category` | Load all agents from a category | ↕ |
-| `swarm_name` | Swarm display name | No |
-| `mission` | Mission statement for the swarm prompt | No |
-| `source_repo` | Git URL of the agent roster to load from | No — defaults to `msitarzewski/agency-agents` |
-| `source_ref` | Branch/tag/ref of `source_repo` to check out | No — defaults to `main` |
+| Input         | Description                                  | Required                                      |
+| ------------- | -------------------------------------------- | --------------------------------------------- |
+| `agent`       | Single agent name or slug                    | One of these                                  |
+| `agents`      | Comma-separated slugs for swarm mode         | ↕                                             |
+| `category`    | Load all agents from a category              | ↕                                             |
+| `swarm_name`  | Swarm display name                           | No                                            |
+| `mission`     | Mission statement for the swarm prompt       | No                                            |
+| `source_repo` | Git URL of the agent roster to load from     | No — defaults to `msitarzewski/agency-agents` |
+| `source_ref`  | Branch/tag/ref of `source_repo` to check out | No — defaults to `main`                       |
 
 **Action Outputs**
 
-| Output | Description |
-|--------|-------------|
+| Output          | Description                                   |
+| --------------- | --------------------------------------------- |
 | `system_prompt` | Agent or swarm orchestrator prompt (Markdown) |
-| `agent_name` | Resolved agent name (single-agent only) |
-| `agent_json` | Agent metadata JSON (single-agent only) |
-| `swarm_json` | Array of agent metadata JSON (swarm mode) |
+| `agent_name`    | Resolved agent name (single-agent only)       |
+| `agent_json`    | Agent metadata JSON (single-agent only)       |
+| `swarm_json`    | Array of agent metadata JSON (swarm mode)     |
 
 Point at a fork or a pinned release instead of live `main`:
 
 ```yaml
-      - uses: el-j/agency-agents-sdk@main
-        with:
-          agent: backend-architect
-          source_repo: 'https://github.com/your-org/agency-agents.git'
-          source_ref: 'v2026.09.01'
+- uses: el-j/agency-agents-sdk@main
+  with:
+    agent: backend-architect
+    source_repo: "https://github.com/your-org/agency-agents.git"
+    source_ref: "v2026.09.01"
 ```
 
 ## Development

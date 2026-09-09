@@ -1,15 +1,18 @@
-/// <reference types="vitest" />
-import { describe, it, expect } from 'vitest';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { buildSwarm } from '../src/swarm.js';
-import { loadAgentsFromDir } from '../src/loader.js';
-import type { Agent } from '../src/types.js';
+import { describe, it, expect } from "vitest";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { buildSwarm } from "../src/swarm.js";
+import { loadAgentsFromDir } from "../src/loader.js";
+import type { Agent } from "../src/types.js";
 
 const __filename = fileURLToPath(import.meta.url);
 // This package ships no agent content of its own (see src/source.ts) — tests
 // run against a small synthetic roster committed under __tests__/fixtures.
-const FIXTURE_ROOT = path.resolve(path.dirname(__filename), 'fixtures', 'roster');
+const FIXTURE_ROOT = path.resolve(
+  path.dirname(__filename),
+  "fixtures",
+  "roster",
+);
 
 function getFixtureAgents(count = 3): Agent[] {
   const all = loadAgentsFromDir(FIXTURE_ROOT);
@@ -19,12 +22,14 @@ function getFixtureAgents(count = 3): Agent[] {
 // ---------------------------------------------------------------------------
 // buildSwarm
 // ---------------------------------------------------------------------------
-describe('buildSwarm', () => {
-  it('throws when given an empty agents array', () => {
-    expect(() => buildSwarm([])).toThrow('buildSwarm requires at least one agent');
+describe("buildSwarm", () => {
+  it("throws when given an empty agents array", () => {
+    expect(() => buildSwarm([])).toThrow(
+      "buildSwarm requires at least one agent",
+    );
   });
 
-  it('returns a swarm with the same agents array content', () => {
+  it("returns a swarm with the same agents array content", () => {
     const agents = getFixtureAgents(2);
     const swarm = buildSwarm(agents);
     expect(swarm.agents).toHaveLength(2);
@@ -32,7 +37,7 @@ describe('buildSwarm', () => {
     expect(swarm.agents[1]?.name).toBe(agents[1]?.name);
   });
 
-  it('orchestratorPrompt includes all agent names', () => {
+  it("orchestratorPrompt includes all agent names", () => {
     const agents = getFixtureAgents(3);
     const swarm = buildSwarm(agents);
     for (const a of agents) {
@@ -40,7 +45,7 @@ describe('buildSwarm', () => {
     }
   });
 
-  it('orchestratorPrompt includes agent descriptions', () => {
+  it("orchestratorPrompt includes agent descriptions", () => {
     const agents = getFixtureAgents(2);
     const swarm = buildSwarm(agents);
     for (const a of agents) {
@@ -48,45 +53,45 @@ describe('buildSwarm', () => {
     }
   });
 
-  it('orchestratorPrompt embeds system prompts in <system-prompt> tags', () => {
+  it("orchestratorPrompt embeds system prompts in <system-prompt> tags", () => {
     const agents = getFixtureAgents(1);
     const swarm = buildSwarm(agents);
-    expect(swarm.orchestratorPrompt).toContain('<system-prompt>');
-    expect(swarm.orchestratorPrompt).toContain('</system-prompt>');
+    expect(swarm.orchestratorPrompt).toContain("<system-prompt>");
+    expect(swarm.orchestratorPrompt).toContain("</system-prompt>");
   });
 
-  it('uses default swarm name when not provided', () => {
+  it("uses default swarm name when not provided", () => {
     const agents = getFixtureAgents(1);
     const swarm = buildSwarm(agents);
-    expect(swarm.orchestratorPrompt).toContain('Agency Swarm');
+    expect(swarm.orchestratorPrompt).toContain("Agency Swarm");
   });
 
-  it('uses custom swarm name when provided', () => {
+  it("uses custom swarm name when provided", () => {
     const agents = getFixtureAgents(1);
-    const swarm = buildSwarm(agents, { name: 'MVP Squad' });
-    expect(swarm.orchestratorPrompt).toContain('MVP Squad');
+    const swarm = buildSwarm(agents, { name: "MVP Squad" });
+    expect(swarm.orchestratorPrompt).toContain("MVP Squad");
   });
 
-  it('includes mission statement when provided', () => {
+  it("includes mission statement when provided", () => {
     const agents = getFixtureAgents(1);
-    const swarm = buildSwarm(agents, { mission: 'Launch the product by Q4' });
-    expect(swarm.orchestratorPrompt).toContain('Launch the product by Q4');
+    const swarm = buildSwarm(agents, { mission: "Launch the product by Q4" });
+    expect(swarm.orchestratorPrompt).toContain("Launch the product by Q4");
   });
 
-  it('works with a single agent', () => {
+  it("works with a single agent", () => {
     const [single] = getFixtureAgents(1);
     const swarm = buildSwarm([single!]);
     expect(swarm.agents).toHaveLength(1);
     expect(swarm.orchestratorPrompt).toBeTruthy();
   });
 
-  it('works with a full swarm of 10 agents', () => {
+  it("works with a full swarm of 10 agents", () => {
     const agents = getFixtureAgents(10);
     const swarm = buildSwarm(agents, {
-      name: 'Full Agency',
-      mission: 'Deliver a complete SaaS product',
+      name: "Full Agency",
+      mission: "Deliver a complete SaaS product",
     });
     expect(swarm.agents).toHaveLength(10);
-    expect(swarm.orchestratorPrompt).toContain('Full Agency');
+    expect(swarm.orchestratorPrompt).toContain("Full Agency");
   });
 });

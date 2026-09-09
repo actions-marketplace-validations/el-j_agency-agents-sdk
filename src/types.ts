@@ -11,24 +11,24 @@ export interface AgentFrontmatter {
 
 /** Agent category identifiers matching the repository directory names (see divisions.json). */
 export type AgentCategory =
-  | 'academic'
-  | 'design'
-  | 'engineering'
-  | 'finance'
-  | 'game-development'
-  | 'gis'
-  | 'healthcare'
-  | 'marketing'
-  | 'paid-media'
-  | 'product'
-  | 'project-management'
-  | 'research'
-  | 'sales'
-  | 'security'
-  | 'spatial-computing'
-  | 'specialized'
-  | 'support'
-  | 'testing';
+  | "academic"
+  | "design"
+  | "engineering"
+  | "finance"
+  | "game-development"
+  | "gis"
+  | "healthcare"
+  | "marketing"
+  | "paid-media"
+  | "product"
+  | "project-management"
+  | "research"
+  | "sales"
+  | "security"
+  | "spatial-computing"
+  | "specialized"
+  | "support"
+  | "testing";
 
 /** A fully-resolved agent with parsed frontmatter and body content. */
 export interface Agent {
