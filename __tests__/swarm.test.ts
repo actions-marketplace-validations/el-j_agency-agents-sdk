@@ -7,11 +7,12 @@ import { loadAgentsFromDir } from '../src/loader.js';
 import type { Agent } from '../src/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const REPO_ROOT = path.resolve(path.dirname(__filename), '..');
+// This package ships no agent content of its own (see src/source.ts) — tests
+// run against a small synthetic roster committed under __tests__/fixtures.
+const FIXTURE_ROOT = path.resolve(path.dirname(__filename), 'fixtures', 'roster');
 
-// Load a small stable fixture set for tests
 function getFixtureAgents(count = 3): Agent[] {
-  const all = loadAgentsFromDir(REPO_ROOT);
+  const all = loadAgentsFromDir(FIXTURE_ROOT);
   return all.slice(0, count);
 }
 

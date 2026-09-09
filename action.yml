@@ -42,6 +42,16 @@ inputs:
     required: false
     default: ''
 
+  source_repo:
+    description: 'Git URL of the agent roster to load from.'
+    required: false
+    default: 'https://github.com/msitarzewski/agency-agents.git'
+
+  source_ref:
+    description: 'Branch, tag, or ref of source_repo to check out.'
+    required: false
+    default: 'main'
+
 outputs:
   system_prompt:
     description: 'The agent system prompt (Markdown). For swarms this is the full orchestrator prompt.'
@@ -71,24 +81,36 @@ runs:
         AGENCY_CATEGORY: ${{ inputs.category }}
         AGENCY_SWARM_NAME: ${{ inputs.swarm_name }}
         AGENCY_MISSION: ${{ inputs.mission }}
-        AGENCY_ACTION_PATH: ${{ github.action_path }}
+        AGENCY_SOURCE_REPO: ${{ inputs.source_repo }}
+        AGENCY_SOURCE_REF: ${{ inputs.source_ref }}
       run: |
         // -----------------------------------------------------------------------
-        // agency-agents GitHub Action — inline Node.js loader
+        // agency-agents-sdk GitHub Action — inline Node.js loader
         //
-        // Pure Node.js, zero npm dependencies. Mirrors the bash get_field logic
-        // from scripts/lint-agents.sh: reads frontmatter lines and extracts
-        // `key: rest-of-line` without a strict YAML parser.
+        // Pure Node.js, zero npm dependencies. Shallow-clones the agent roster
+        // from source_repo/source_ref at run time (this action ships no agent
+        // content of its own). Frontmatter parsing mirrors the bash get_field
+        // logic from scripts/lint-agents.sh in the source repo: reads
+        // frontmatter lines and extracts `key: rest-of-line` without a strict
+        // YAML parser.
         // -----------------------------------------------------------------------
-        const fs   = require('fs');
-        const path = require('path');
-        const os   = require('os');
+        const fs            = require('fs');
+        const path          = require('path');
+        const os            = require('os');
+        const { execFileSync } = require('child_process');
 
         const AGENT_CATEGORIES = [
-          'design', 'engineering', 'game-development', 'marketing',
-          'paid-media', 'product', 'project-management', 'testing',
-          'support', 'spatial-computing', 'specialized',
+          'academic', 'design', 'engineering', 'finance', 'game-development',
+          'gis', 'healthcare', 'marketing', 'paid-media', 'product',
+          'project-management', 'research', 'sales', 'security',
+          'spatial-computing', 'specialized', 'support', 'testing',
         ];
+
+        function cloneSource(repo, ref) {
+          const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'agency-agents-'));
+          execFileSync('git', ['clone', '--depth', '1', '--branch', ref, repo, dir], { stdio: 'inherit' });
+          return dir;
+        }
 
         // ── helpers ──────────────────────────────────────────────────────────
         function slugify(name) {
@@ -193,12 +215,16 @@ runs:
         }
 
         // ── main ─────────────────────────────────────────────────────────────
-        const rootDir    = process.env.AGENCY_ACTION_PATH || process.cwd();
+        const sourceRepo = (process.env.AGENCY_SOURCE_REPO || 'https://github.com/msitarzewski/agency-agents.git').trim();
+        const sourceRef  = (process.env.AGENCY_SOURCE_REF  || 'main').trim();
         const agentInput = (process.env.AGENCY_AGENT    || '').trim();
         const agentsRaw  = (process.env.AGENCY_AGENTS   || '').trim();
         const category   = (process.env.AGENCY_CATEGORY || '').trim();
         const swarmName  = (process.env.AGENCY_SWARM_NAME || 'Agency Swarm').trim();
         const mission    = (process.env.AGENCY_MISSION   || '').trim();
+
+        console.log(`Fetching agent roster from ${sourceRepo}@${sourceRef} ...`);
+        const rootDir = cloneSource(sourceRepo, sourceRef);
 
         const all = loadAll(rootDir);
 

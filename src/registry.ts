@@ -1,40 +1,26 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { loadAgentsFromDir, slugify } from './loader.js';
+import { resolveSourceRoot } from './source.js';
 import type { Agent, AgentCategory } from './types.js';
-
-// ---------------------------------------------------------------------------
-// Package-root detection
-// ---------------------------------------------------------------------------
-// Resolve the repository root relative to this compiled file so the registry
-// works both from the source tree and from a published npm package.
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-// dist/registry.js  →  go up one level to reach repo root
-const PACKAGE_ROOT = path.resolve(__dirname, '..');
 
 // ---------------------------------------------------------------------------
 // Registry
 // ---------------------------------------------------------------------------
+// This package ships no agent content of its own. Unless a caller passes an
+// explicit rootDir, agents are read from a local clone of the upstream
+// roster (msitarzewski/agency-agents), fetched on demand — see source.ts.
 
 /** Cache map: resolved rootDir → loaded agents array. */
 const _cache = new Map<string, Agent[]>();
 
 /**
- * Return the resolved root directory used to load agents.
- * Exported for testing purposes.
- */
-export function getPackageRoot(): string {
-  return PACKAGE_ROOT;
-}
-
-/**
  * Load all agents from disk (or return the cached list on subsequent calls).
  *
- * @param rootDir  Override the default package root. Useful in tests.
+ * @param rootDir  Directory to scan for agent category sub-directories.
+ *                 Defaults to a local clone of the upstream agency-agents
+ *                 roster (cloned/fetched on demand — see `resolveSourceRoot`).
  */
 export function loadAgents(rootDir?: string): Agent[] {
-  const resolvedRoot = rootDir !== undefined ? rootDir : PACKAGE_ROOT;
+  const resolvedRoot = rootDir !== undefined ? rootDir : resolveSourceRoot();
   const cached = _cache.get(resolvedRoot);
   if (cached !== undefined) {
     return cached;

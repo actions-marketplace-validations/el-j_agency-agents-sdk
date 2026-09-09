@@ -1,8 +1,10 @@
 # agency-agents-sdk
 
-A TypeScript SDK, CLI, and GitHub Action for loading [Agency Agents](https://github.com/msitarzewski/agency-agents) personalities programmatically and building multi-agent swarm prompts — without cloning the source repo or copying `.md` files by hand.
+A TypeScript SDK, CLI, and GitHub Action for loading [Agency Agents](https://github.com/msitarzewski/agency-agents) personalities programmatically and building multi-agent swarm prompts.
 
-> **What this is:** a companion package to [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents), which remains the source of truth for the agent roster (markdown personality files, install scripts for Claude Code / Cursor / Codex / etc.). This repo packages that roster with a typed API, a CLI, and a GitHub Action, published independently so the source repo can stay dependency-free markdown. Originally proposed in [msitarzewski/agency-agents#118](https://github.com/msitarzewski/agency-agents/discussions/118) and [#117](https://github.com/msitarzewski/agency-agents/pull/117) / [#847](https://github.com/msitarzewski/agency-agents/pull/847).
+> **What this is:** a companion package to [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents), which remains the sole source of truth for the agent roster (markdown personality files, install scripts for Claude Code / Cursor / Codex / etc.). **This package ships no agent content of its own** — it reads directly from a local clone of the upstream repo, fetched/refreshed on demand. That keeps the source repo dependency-free markdown, and means this SDK never drifts out of date with it. Originally proposed in [msitarzewski/agency-agents#118](https://github.com/msitarzewski/agency-agents/discussions/118) and [#117](https://github.com/msitarzewski/agency-agents/pull/117) / [#847](https://github.com/msitarzewski/agency-agents/pull/847).
+
+**Requires `git`** on `PATH` — that's how the roster is fetched. No other runtime dependencies.
 
 ## Install
 
@@ -15,7 +17,9 @@ npm install agency-agents-sdk
 ```typescript
 import { getAgent, listAgents, buildSwarm } from 'agency-agents-sdk';
 
-// Get a single agent
+// Get a single agent — on first call this shallow-clones
+// msitarzewski/agency-agents into a local cache; later calls in the same
+// process reuse it, and each new process re-fetches to stay current.
 const agent = getAgent('frontend-developer');
 console.log(agent?.systemPrompt); // full system prompt
 
@@ -30,6 +34,14 @@ const swarm = buildSwarm(
 // Feed swarm.orchestratorPrompt to your LLM as the system prompt
 ```
 
+Already have your own checkout of `msitarzewski/agency-agents` (or a fork)? Point straight at it and skip the fetch entirely:
+
+```typescript
+import { getAgent } from 'agency-agents-sdk';
+
+const agent = getAgent('frontend-developer', '/path/to/your/agency-agents/checkout');
+```
+
 ## CLI
 
 ```bash
@@ -38,9 +50,14 @@ npx agency-agents-sdk list --category engineering            # filter by categor
 npx agency-agents-sdk get frontend-developer --prompt        # print system prompt only
 npx agency-agents-sdk swarm frontend-developer,backend-architect --mission "Build API"
 npx agency-agents-sdk categories                             # print all categories
+
+# Point at your own checkout instead of fetching upstream
+npx agency-agents-sdk --root ./my-agency-agents-checkout list
 ```
 
 ## GitHub Action
+
+Clones the roster from `source_repo`/`source_ref` at run time — no `actions/checkout` of the source repo needed in your workflow.
 
 ```yaml
 # .github/workflows/ai-review.yml
@@ -48,8 +65,6 @@ jobs:
   review:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       # Single agent
       - name: Load Security Engineer agent
         id: agent
@@ -87,6 +102,8 @@ jobs:
 | `category` | Load all agents from a category | ↕ |
 | `swarm_name` | Swarm display name | No |
 | `mission` | Mission statement for the swarm prompt | No |
+| `source_repo` | Git URL of the agent roster to load from | No — defaults to `msitarzewski/agency-agents` |
+| `source_ref` | Branch/tag/ref of `source_repo` to check out | No — defaults to `main` |
 
 **Action Outputs**
 
@@ -97,9 +114,15 @@ jobs:
 | `agent_json` | Agent metadata JSON (single-agent only) |
 | `swarm_json` | Array of agent metadata JSON (swarm mode) |
 
-## Keeping the roster in sync
+Point at a fork or a pinned release instead of live `main`:
 
-The agent `.md` files under each division directory (`engineering/`, `design/`, etc.) are a vendored snapshot of [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents), refreshed periodically from upstream `main`. `divisions.json` tracks the current division set; `src/loader.ts`'s `AGENT_CATEGORIES` must match it. If you need the latest roster immediately, `getAgent`/`listAgents` accept a `rootDir` override so you can point them at your own clone of the source repo instead of the bundled snapshot.
+```yaml
+      - uses: el-j/agency-agents-sdk@main
+        with:
+          agent: backend-architect
+          source_repo: 'https://github.com/your-org/agency-agents.git'
+          source_ref: 'v2026.09.01'
+```
 
 ## Development
 
@@ -110,8 +133,8 @@ npm test
 npm run build
 ```
 
-37 tests, zero production dependencies.
+Tests run against a small synthetic roster committed under `__tests__/fixtures/` — they don't hit the network or depend on upstream content. Zero production dependencies.
 
 ## License
 
-MIT — agent personality content originates from the [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents) contributors; see that repo for individual agent authorship.
+MIT for this SDK/Action's own code. Agent personality content originates from the [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents) contributors and is fetched from that repo at run time — see it for individual agent authorship and its own license.

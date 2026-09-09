@@ -11,7 +11,10 @@ import {
 } from '../src/loader.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const REPO_ROOT = path.resolve(path.dirname(__filename), '..');
+// This package ships no agent content of its own (see src/source.ts) — tests
+// run against a small synthetic roster committed under __tests__/fixtures so
+// they stay hermetic and don't depend on network access.
+const FIXTURE_ROOT = path.resolve(path.dirname(__filename), 'fixtures', 'roster');
 
 // ---------------------------------------------------------------------------
 // slugify
@@ -43,19 +46,19 @@ describe('slugify', () => {
 // ---------------------------------------------------------------------------
 describe('collectMarkdownFiles', () => {
   it('returns only .md files', () => {
-    const files = collectMarkdownFiles(path.join(REPO_ROOT, 'engineering'));
+    const files = collectMarkdownFiles(path.join(FIXTURE_ROOT, 'engineering'));
     expect(files.every((f) => f.endsWith('.md'))).toBe(true);
   });
 
   it('returns a sorted list', () => {
-    const files = collectMarkdownFiles(path.join(REPO_ROOT, 'engineering'));
+    const files = collectMarkdownFiles(path.join(FIXTURE_ROOT, 'engineering'));
     const sorted = [...files].sort();
     expect(files).toEqual(sorted);
   });
 
   it('recurses into sub-directories', () => {
-    // game-development has sub-directories (unity, unreal-engine, godot, roblox-studio)
-    const files = collectMarkdownFiles(path.join(REPO_ROOT, 'game-development'));
+    // fixtures/roster/engineering/subsystem/ holds 2 of the 5 engineering files
+    const files = collectMarkdownFiles(path.join(FIXTURE_ROOT, 'engineering'));
     expect(files.length).toBeGreaterThan(4);
   });
 });
@@ -68,7 +71,7 @@ describe('loadAgentFile', () => {
   let firstFile: string;
 
   beforeAll(() => {
-    engineeringDir = path.join(REPO_ROOT, 'engineering');
+    engineeringDir = path.join(FIXTURE_ROOT, 'engineering');
     const files = collectMarkdownFiles(engineeringDir);
     firstFile = files[0]!;
   });
@@ -93,13 +96,13 @@ describe('loadAgentFile', () => {
 // loadAgentsFromDir
 // ---------------------------------------------------------------------------
 describe('loadAgentsFromDir', () => {
-  it('loads agents from the repository root', () => {
-    const agents = loadAgentsFromDir(REPO_ROOT);
-    expect(agents.length).toBeGreaterThan(50);
+  it('loads agents from the fixture roster', () => {
+    const agents = loadAgentsFromDir(FIXTURE_ROOT);
+    expect(agents.length).toBe(13);
   });
 
   it('every returned agent has required fields', () => {
-    const agents = loadAgentsFromDir(REPO_ROOT);
+    const agents = loadAgentsFromDir(FIXTURE_ROOT);
     for (const a of agents) {
       expect(a.name).toBeTruthy();
       expect(a.slug).toMatch(/^[a-z0-9-]+$/);
@@ -114,8 +117,8 @@ describe('loadAgentsFromDir', () => {
     expect(agents).toEqual([]);
   });
 
-  it('agent names are unique within the full roster', () => {
-    const agents = loadAgentsFromDir(REPO_ROOT);
+  it('agent names are unique within the fixture roster', () => {
+    const agents = loadAgentsFromDir(FIXTURE_ROOT);
     const names = agents.map((a) => a.name);
     const unique = new Set(names);
     expect(unique.size).toBe(names.length);

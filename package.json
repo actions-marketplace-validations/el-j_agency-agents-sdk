@@ -1,7 +1,7 @@
 {
   "name": "agency-agents-sdk",
   "version": "1.0.0",
-  "description": "TypeScript SDK, CLI, and GitHub Action for loading Agency Agents (msitarzewski/agency-agents) personalities and building multi-agent swarms",
+  "description": "TypeScript SDK, CLI, and GitHub Action for loading agent personalities from msitarzewski/agency-agents and building multi-agent swarms. Ships no agent content of its own — fetches the roster from the source repo.",
   "type": "module",
   "exports": {
     ".": {
@@ -17,26 +17,7 @@
     "agency-agents": "./dist/cli.js"
   },
   "files": [
-    "dist",
-    "academic",
-    "design",
-    "engineering",
-    "finance",
-    "game-development",
-    "gis",
-    "healthcare",
-    "marketing",
-    "paid-media",
-    "product",
-    "project-management",
-    "research",
-    "sales",
-    "security",
-    "spatial-computing",
-    "specialized",
-    "support",
-    "testing",
-    "divisions.json"
+    "dist"
   ],
   "scripts": {
     "build": "tsc --project tsconfig.build.json && node scripts/build-cjs.mjs",

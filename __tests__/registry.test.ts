@@ -6,7 +6,10 @@ import { getAgent, listAgents, listCategories, loadAgents, _resetCache } from '.
 import type { AgentCategory } from '../src/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const REPO_ROOT = path.resolve(path.dirname(__filename), '..');
+// This package ships no agent content of its own (see src/source.ts) — tests
+// run against a small synthetic roster committed under __tests__/fixtures so
+// they stay hermetic and don't depend on network access.
+const FIXTURE_ROOT = path.resolve(path.dirname(__filename), 'fixtures', 'roster');
 
 afterEach(() => {
   _resetCache();
@@ -16,25 +19,25 @@ afterEach(() => {
 // loadAgents
 // ---------------------------------------------------------------------------
 describe('loadAgents', () => {
-  it('loads all agents when called with the repo root', () => {
-    const agents = loadAgents(REPO_ROOT);
-    expect(agents.length).toBeGreaterThan(50);
+  it('loads all agents when called with a rootDir', () => {
+    const agents = loadAgents(FIXTURE_ROOT);
+    expect(agents.length).toBe(13);
   });
 
   it('uses the cached result on second call', () => {
-    const first = loadAgents(REPO_ROOT);
-    const second = loadAgents(REPO_ROOT);
+    const first = loadAgents(FIXTURE_ROOT);
+    const second = loadAgents(FIXTURE_ROOT);
     // Both calls with the same rootDir must return the exact same array reference
     expect(first).toBe(second);
   });
 
   it('bypasses cache when rootDir is explicitly different', () => {
-    const a = loadAgents(REPO_ROOT);
+    const a = loadAgents(FIXTURE_ROOT);
     // Same path → cache hit, same reference
-    const b = loadAgents(REPO_ROOT);
+    const b = loadAgents(FIXTURE_ROOT);
     expect(a).toBe(b);
     // Different path (even if resolves to same content) → separate cache entry
-    const c = loadAgents(REPO_ROOT);
+    const c = loadAgents(FIXTURE_ROOT);
     expect(a).toBe(c);
   });
 });
@@ -44,23 +47,28 @@ describe('loadAgents', () => {
 // ---------------------------------------------------------------------------
 describe('getAgent', () => {
   it('finds an agent by slug', () => {
-    const agent = getAgent('frontend-developer', REPO_ROOT);
+    const agent = getAgent('engineer-alpha', FIXTURE_ROOT);
     expect(agent).toBeDefined();
-    expect(agent?.name).toBe('Frontend Developer');
+    expect(agent?.name).toBe('Engineer Alpha');
   });
 
   it('finds an agent by full name (case-insensitive)', () => {
-    const agent = getAgent('Frontend Developer', REPO_ROOT);
-    expect(agent?.slug).toBe('frontend-developer');
+    const agent = getAgent('Engineer Alpha', FIXTURE_ROOT);
+    expect(agent?.slug).toBe('engineer-alpha');
   });
 
   it('returns undefined for an unknown slug', () => {
-    const agent = getAgent('does-not-exist', REPO_ROOT);
+    const agent = getAgent('does-not-exist', FIXTURE_ROOT);
     expect(agent).toBeUndefined();
   });
 
-  it('finds the agents-orchestrator from specialized', () => {
-    const agent = getAgent('agents-orchestrator', REPO_ROOT);
+  it('finds an agent nested in a sub-directory', () => {
+    const agent = getAgent('engineer-delta', FIXTURE_ROOT);
+    expect(agent?.category).toBe('engineering');
+  });
+
+  it('finds the orchestrator agent from specialized', () => {
+    const agent = getAgent('orchestrator-prime', FIXTURE_ROOT);
     expect(agent?.category).toBe('specialized');
   });
 });
@@ -70,13 +78,13 @@ describe('getAgent', () => {
 // ---------------------------------------------------------------------------
 describe('listAgents', () => {
   it('returns all agents when called without a category', () => {
-    const all = listAgents(undefined, REPO_ROOT);
-    expect(all.length).toBeGreaterThan(50);
+    const all = listAgents(undefined, FIXTURE_ROOT);
+    expect(all.length).toBe(13);
   });
 
   it('filters correctly by category', () => {
-    const engineering = listAgents('engineering', REPO_ROOT);
-    expect(engineering.length).toBeGreaterThan(0);
+    const engineering = listAgents('engineering', FIXTURE_ROOT);
+    expect(engineering.length).toBe(5);
     expect(engineering.every((a) => a.category === 'engineering')).toBe(true);
   });
 
@@ -91,18 +99,18 @@ describe('listAgents', () => {
 // ---------------------------------------------------------------------------
 describe('listCategories', () => {
   it('returns a non-empty list of categories', () => {
-    const cats = listCategories(REPO_ROOT);
+    const cats = listCategories(FIXTURE_ROOT);
     expect(cats.length).toBeGreaterThan(0);
   });
 
   it('includes "engineering" and "design"', () => {
-    const cats = listCategories(REPO_ROOT);
+    const cats = listCategories(FIXTURE_ROOT);
     expect(cats).toContain('engineering');
     expect(cats).toContain('design');
   });
 
   it('contains no duplicates', () => {
-    const cats = listCategories(REPO_ROOT);
+    const cats = listCategories(FIXTURE_ROOT);
     expect(new Set(cats).size).toBe(cats.length);
   });
 });

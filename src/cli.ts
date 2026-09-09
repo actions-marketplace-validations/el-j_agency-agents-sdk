@@ -3,15 +3,37 @@
  * agency-agents CLI
  *
  * Usage:
- *   agency-agents list [--category <cat>] [--json]
- *   agency-agents get <name-or-slug> [--json] [--prompt]
- *   agency-agents swarm <slug,...> [--name <swarm-name>] [--mission <text>]
- *   agency-agents categories
+ *   agency-agents [--root <path>] list [--category <cat>] [--json]
+ *   agency-agents [--root <path>] get <name-or-slug> [--json] [--prompt]
+ *   agency-agents [--root <path>] swarm <slug,...> [--name <swarm-name>] [--mission <text>]
+ *   agency-agents [--root <path>] categories
+ *
+ * Without --root, agents are read from a local clone of the upstream
+ * agency-agents roster, fetched/refreshed on demand (see src/source.ts).
+ * Pass --root to point at your own checkout instead (skips the network
+ * fetch entirely).
  */
 
 import process from 'node:process';
 import { getAgent, listAgents, listCategories, buildSwarm, AGENT_CATEGORIES } from './index.js';
 import type { Agent, AgentCategory } from './types.js';
+
+// ---------------------------------------------------------------------------
+// Global --root flag
+// ---------------------------------------------------------------------------
+
+function extractRoot(argv: string[]): { root: string | undefined; rest: string[] } {
+  const rest: string[] = [];
+  let root: string | undefined;
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--root' && argv[i + 1] !== undefined) {
+      root = argv[++i];
+    } else {
+      rest.push(argv[i]!);
+    }
+  }
+  return { root, rest };
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -35,7 +57,10 @@ function printAgent(agent: Agent, asJson: boolean, promptOnly: boolean): void {
 
 function usage(): void {
   console.log(`
-Usage: agency-agents <command> [options]
+Usage: agency-agents [--root <path>] <command> [options]
+
+Without --root, agents are read from a local clone of msitarzewski/agency-agents,
+fetched/refreshed on demand. Pass --root to point at your own checkout instead.
 
 Commands:
   list [--category <cat>] [--json]
@@ -55,6 +80,7 @@ Examples:
   agency-agents list --category engineering
   agency-agents get frontend-developer --prompt
   agency-agents swarm frontend-developer,backend-architect --mission "Build an API"
+  agency-agents --root ./my-agency-agents-checkout list
 `);
 }
 
@@ -62,7 +88,7 @@ Examples:
 // Command handlers
 // ---------------------------------------------------------------------------
 
-function cmdList(args: string[]): void {
+function cmdList(args: string[], root: string | undefined): void {
   let category: string | undefined;
   let asJson = false;
 
@@ -84,7 +110,7 @@ function cmdList(args: string[]): void {
     validCategory = category as AgentCategory;
   }
 
-  const agents = listAgents(validCategory);
+  const agents = listAgents(validCategory, root);
 
   if (asJson) {
     process.stdout.write(JSON.stringify(agents, null, 2) + '\n');
@@ -112,7 +138,7 @@ function cmdList(args: string[]): void {
   console.log(`\nTotal: ${agents.length} agent(s)`);
 }
 
-function cmdGet(args: string[]): void {
+function cmdGet(args: string[], root: string | undefined): void {
   const nameOrSlug = args[0];
   if (!nameOrSlug) {
     console.error('Error: get requires a name or slug argument.');
@@ -126,7 +152,7 @@ function cmdGet(args: string[]): void {
     if (arg === '--prompt') promptOnly = true;
   }
 
-  const agent = getAgent(nameOrSlug);
+  const agent = getAgent(nameOrSlug, root);
   if (!agent) {
     console.error(`Error: agent "${nameOrSlug}" not found.`);
     process.exit(1);
@@ -135,7 +161,7 @@ function cmdGet(args: string[]): void {
   printAgent(agent, asJson, promptOnly);
 }
 
-function cmdSwarm(args: string[]): void {
+function cmdSwarm(args: string[], root: string | undefined): void {
   const slugsRaw = args[0];
   if (!slugsRaw) {
     console.error('Error: swarm requires at least one agent slug.');
@@ -152,7 +178,7 @@ function cmdSwarm(args: string[]): void {
 
   const slugs = slugsRaw.split(',').map((s) => s.trim());
   const agents = slugs.map((slug) => {
-    const a = getAgent(slug);
+    const a = getAgent(slug, root);
     if (!a) {
       console.error(`Error: agent "${slug}" not found.`);
       process.exit(1);
@@ -167,8 +193,8 @@ function cmdSwarm(args: string[]): void {
   process.stdout.write(swarm.orchestratorPrompt + '\n');
 }
 
-function cmdCategories(): void {
-  const cats = listCategories();
+function cmdCategories(root: string | undefined): void {
+  const cats = listCategories(root);
   for (const c of cats) {
     console.log(`  • ${c}`);
   }
@@ -178,20 +204,21 @@ function cmdCategories(): void {
 // Entry point
 // ---------------------------------------------------------------------------
 
-const [, , command, ...rest] = process.argv;
+const [, , command, ...rawRest] = process.argv;
+const { root, rest } = extractRoot(rawRest);
 
 switch (command) {
   case 'list':
-    cmdList(rest);
+    cmdList(rest, root);
     break;
   case 'get':
-    cmdGet(rest);
+    cmdGet(rest, root);
     break;
   case 'swarm':
-    cmdSwarm(rest);
+    cmdSwarm(rest, root);
     break;
   case 'categories':
-    cmdCategories();
+    cmdCategories(root);
     break;
   case '--help':
   case '-h':
